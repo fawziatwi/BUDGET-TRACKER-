@@ -18,6 +18,12 @@ export async function renderDashboard(root) {
 
   function paint() {
     container.innerHTML = buildHtml();
+    container.querySelectorAll('.list-item[data-id]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const tx = store.transactions.find((t) => t.id === el.dataset.id);
+        if (tx) openTransactionForm({ transaction: tx });
+      });
+    });
   }
 
   const unsub = subscribe(paint);
@@ -59,7 +65,7 @@ function buildHtml() {
   return `
     <div class="page-title">Home</div>
 
-    <div class="card">
+    <div class="card hero">
       <div class="card-title">Net Position</div>
       <div class="hero-amount">${fmtMoney(netWorth)}</div>
       <div class="hstack" style="margin-top:8px; flex-wrap:wrap; gap:8px;">
@@ -147,7 +153,7 @@ function buildHtml() {
 function txRow(t) {
   const cat = categoryById(t.category);
   return `
-    <div class="list-item">
+    <div class="list-item" data-id="${t.id}" style="cursor:pointer">
       <div class="icon-badge" style="background:${cat.color}26">${cat.icon}</div>
       <div style="flex:1">
         <div class="item-title">${escapeHtml(t.merchant)}</div>

@@ -98,4 +98,9 @@ async function main() {
   }
 }
 
+// iOS Safari only fires the CSS :active pseudo-class on elements that have a
+// touchstart listener somewhere in the document — without this, every button/
+// chip/list-item press state in styles.css would silently never trigger.
+document.addEventListener('touchstart', () => {}, { passive: true });
+
 main();

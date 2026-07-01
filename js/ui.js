@@ -3,19 +3,82 @@
 export function openSheet(innerHtml, { onMount, onClose } = {}) {
   const backdrop = document.createElement('div');
   backdrop.className = 'sheet-backdrop';
-  backdrop.innerHTML = `<div class="sheet"><div class="sheet-handle"></div>${innerHtml}</div>`;
-  backdrop.addEventListener('click', (e) => {
-    if (e.target === backdrop) close();
-  });
-  document.body.appendChild(backdrop);
+  backdrop.innerHTML = `
+    <div class="sheet">
+      <div class="sheet-drag">
+        <div class="sheet-handle"></div>
+        <button type="button" class="sheet-close" aria-label="Close">✕</button>
+      </div>
+      <div class="sheet-scroll">${innerHtml}</div>
+    </div>
+  `;
   const sheetEl = backdrop.querySelector('.sheet');
+  const scrollEl = backdrop.querySelector('.sheet-scroll');
+  const dragHandle = backdrop.querySelector('.sheet-drag');
 
+  // Slide-up entrance driven by the CSS `transition` (not a @keyframes
+  // animation — animation + transition on the same property can conflict and
+  // leave the sheet parked off-screen if the animation doesn't resolve).
+  sheetEl.style.transform = 'translateY(100%)';
+  document.body.appendChild(backdrop);
+  sheetEl.getBoundingClientRect(); // force layout so the starting position is registered
+  requestAnimationFrame(() => {
+    sheetEl.style.transform = 'translateY(0)';
+  });
+
+  const previousOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+
+  let closed = false;
   function close() {
-    backdrop.remove();
+    if (closed) return;
+    closed = true;
+    document.removeEventListener('keydown', onKeydown);
+    document.body.style.overflow = previousOverflow;
+    backdrop.classList.add('closing');
+    sheetEl.style.transform = 'translateY(100%)';
+    setTimeout(() => backdrop.remove(), 220);
     if (onClose) onClose();
   }
 
-  if (onMount) onMount(sheetEl, close);
+  function onKeydown(e) {
+    if (e.key === 'Escape') close();
+  }
+  document.addEventListener('keydown', onKeydown);
+
+  // Tapping the dimmed area outside the sheet closes it.
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) close();
+  });
+  // Always-visible close button — the reliable way to dismiss, since on iOS
+  // the first tap outside a focused input just dismisses the keyboard rather
+  // than registering as a click.
+  backdrop.querySelector('.sheet-close').addEventListener('click', close);
+
+  // Swipe-down-to-dismiss on the handle/header area, iOS-native feel.
+  let startY = null;
+  let dragY = 0;
+  dragHandle.addEventListener('touchstart', (e) => {
+    startY = e.touches[0].clientY;
+    sheetEl.style.transition = 'none';
+  }, { passive: true });
+  dragHandle.addEventListener('touchmove', (e) => {
+    if (startY === null) return;
+    dragY = Math.max(0, e.touches[0].clientY - startY);
+    sheetEl.style.transform = `translateY(${dragY}px)`;
+  }, { passive: true });
+  dragHandle.addEventListener('touchend', () => {
+    sheetEl.style.transition = '';
+    if (dragY > 90) {
+      close();
+    } else {
+      sheetEl.style.transform = '';
+    }
+    startY = null;
+    dragY = 0;
+  });
+
+  if (onMount) onMount(scrollEl, close);
   return close;
 }
 
