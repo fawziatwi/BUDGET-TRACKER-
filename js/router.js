@@ -31,7 +31,7 @@ async function render() {
   }
   mountEl.innerHTML = '';
   currentCleanup = await renderFn(mountEl, path);
-  window.scrollTo(0, 0);
+  mountEl.scrollTop = 0;
   document.dispatchEvent(new CustomEvent('routechange', { detail: { path: base } }));
 }
 

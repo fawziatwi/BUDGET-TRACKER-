@@ -26,15 +26,18 @@ export function openSheet(innerHtml, { onMount, onClose } = {}) {
     sheetEl.style.transform = 'translateY(0)';
   });
 
-  const previousOverflow = document.body.style.overflow;
-  document.body.style.overflow = 'hidden';
+  // #app (not body) is the real scroll container, so that's what needs
+  // locking while the sheet is open — body itself never scrolls.
+  const appEl = document.getElementById('app');
+  const previousOverflow = appEl.style.overflow;
+  appEl.style.overflow = 'hidden';
 
   let closed = false;
   function close() {
     if (closed) return;
     closed = true;
     document.removeEventListener('keydown', onKeydown);
-    document.body.style.overflow = previousOverflow;
+    appEl.style.overflow = previousOverflow;
     backdrop.classList.add('closing');
     sheetEl.style.transform = 'translateY(100%)';
     setTimeout(() => backdrop.remove(), 220);
