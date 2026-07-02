@@ -7,7 +7,7 @@ import { db, uid } from './db.js';
 import { store, notify, fmtMoney, toDateStr, todayStr } from './state.js';
 import { toast } from './ui.js';
 
-function advanceDate(dateStr, cadence) {
+export function advanceDate(dateStr, cadence) {
   const d = new Date(dateStr + 'T00:00:00');
   switch (cadence) {
     case 'Weekly': d.setDate(d.getDate() + 7); break;
@@ -17,6 +17,28 @@ function advanceDate(dateStr, cadence) {
     default: d.setMonth(d.getMonth() + 1); break;
   }
   return toDateStr(d);
+}
+
+async function chargeSubscription(sub, date) {
+  const account = store.accounts.find((a) => a.id === sub.accountId);
+  if (!account) return null;
+
+  const tx = {
+    id: uid(),
+    accountId: sub.accountId,
+    date,
+    amount: sub.amount,
+    merchant: sub.merchant,
+    category: sub.category,
+    note: '',
+    method: account.type === 'cash' ? 'cash' : 'card',
+    autoLogged: true,
+  };
+  account.balance += tx.amount;
+  await db.put('transactions', tx);
+  await db.put('accounts', account);
+  store.transactions.push(tx);
+  return tx;
 }
 
 // Processes every manual subscription whose next charge date has arrived,
@@ -31,26 +53,9 @@ export async function processDueSubscriptions() {
     let guard = 0;
     while (sub.nextDate <= today && guard < 24) {
       guard++;
-      const account = store.accounts.find((a) => a.id === sub.accountId);
-      if (!account) break;
-
-      const tx = {
-        id: uid(),
-        accountId: sub.accountId,
-        date: sub.nextDate,
-        amount: sub.amount,
-        merchant: sub.merchant,
-        category: sub.category,
-        note: '',
-        method: account.type === 'cash' ? 'cash' : 'card',
-        autoLogged: true,
-      };
-      account.balance += tx.amount;
-      await db.put('transactions', tx);
-      await db.put('accounts', account);
-      store.transactions.push(tx);
+      const tx = await chargeSubscription(sub, sub.nextDate);
+      if (!tx) break;
       created.push(tx);
-
       sub.nextDate = advanceDate(sub.nextDate, sub.cadence);
     }
     await db.put('subscriptions', sub);
@@ -66,4 +71,27 @@ export async function processDueSubscriptions() {
     }
   }
   return created;
+}
+
+// Manually fires a single subscription's charge right now (e.g. the user
+// tapping "Log now" on a subscription card), regardless of its stored next
+// date. Logs today's transaction and resets the cycle to start from today,
+// so the automatic due-date check never double-charges it later.
+export async function logSubscriptionNow(subId) {
+  const sub = store.subscriptions.find((s) => s.id === subId);
+  if (!sub) return null;
+
+  const today = todayStr();
+  const tx = await chargeSubscription(sub, today);
+  if (!tx) {
+    toast('That account no longer exists');
+    return null;
+  }
+
+  sub.nextDate = advanceDate(today, sub.cadence);
+  await db.put('subscriptions', sub);
+
+  notify();
+  toast(`${sub.merchant} logged: ${fmtMoney(tx.amount)}`);
+  return tx;
 }

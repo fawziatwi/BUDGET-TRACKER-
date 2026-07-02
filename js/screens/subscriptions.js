@@ -2,7 +2,7 @@ import { db, uid } from '../db.js';
 import { store, subscribe, notify, fmtMoney, categoryById, todayStr } from '../state.js';
 import { detectRecurring } from '../smart.js';
 import { openSheet, toast, escapeHtml } from '../ui.js';
-import { processDueSubscriptions } from '../autopay.js';
+import { processDueSubscriptions, logSubscriptionNow } from '../autopay.js';
 
 const CADENCES = [
   { id: 'Weekly', days: 7 },
@@ -27,6 +27,12 @@ export async function renderSubscriptions(root) {
       el.addEventListener('click', () => {
         const s = store.subscriptions.find((x) => x.id === el.dataset.subId);
         if (s) openSubForm(s);
+      });
+    });
+    container.querySelectorAll('.log-btn[data-log-id]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        logSubscriptionNow(el.dataset.logId);
       });
     });
   }
@@ -67,7 +73,10 @@ function buildHtml() {
             ${r.priceIncrease ? ' · <span style="color:var(--red)">price increased</span>' : ''}
           </div>
         </div>
-        <div class="item-amount">${fmtMoney(-Math.abs(r.amount))}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <div class="item-amount">${fmtMoney(-Math.abs(r.amount))}</div>
+          ${r.source === 'manual' ? `<button type="button" class="log-btn" data-log-id="${r.id}">Log now</button>` : ''}
+        </div>
       </div>
     `;
     }).join('') : `
