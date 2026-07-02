@@ -13,7 +13,7 @@ export async function renderDashboard(root) {
   document.body.appendChild(fab);
 
   const container = document.createElement('div');
-  container.className = 'screen';
+  container.className = 'screen screen--fab';
   root.appendChild(container);
 
   function paint() {

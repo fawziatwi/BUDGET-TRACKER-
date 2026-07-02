@@ -10,7 +10,7 @@ export async function renderTransactions(root) {
   document.body.appendChild(fab);
 
   const container = document.createElement('div');
-  container.className = 'screen';
+  container.className = 'screen screen--fab';
   root.appendChild(container);
 
   let search = '';

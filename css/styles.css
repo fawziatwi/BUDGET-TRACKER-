@@ -60,6 +60,13 @@ h1, h2, h3, p { margin: 0; }
   animation: fadein 0.18s ease;
 }
 
+/* Screens with a floating + button need extra bottom clearance so the last
+   list item can scroll fully clear of it — the FAB floats from 72px to
+   130px above the bottom edge, well past the 24px the base .screen reserves. */
+.screen--fab {
+  padding-bottom: 116px;
+}
+
 @keyframes fadein {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
