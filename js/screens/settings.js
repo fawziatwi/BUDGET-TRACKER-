@@ -1,5 +1,5 @@
 import { db, uid, exportAll, importAll } from '../db.js';
-import { store, subscribe, notify, fmtMoney } from '../state.js';
+import { store, subscribe, notify, fmtMoney, todayStr } from '../state.js';
 import { openSheet, toast, escapeHtml } from '../ui.js';
 import { navigate } from '../router.js';
 
@@ -108,7 +108,7 @@ function buildHtml() {
 
 async function doExportJson() {
   const data = await exportAll();
-  downloadFile(JSON.stringify(data, null, 2), `budget-backup-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+  downloadFile(JSON.stringify(data, null, 2), `budget-backup-${todayStr()}.json`, 'application/json');
   toast('Backup exported');
 }
 
@@ -123,7 +123,7 @@ function doExportCsv() {
       return [t.date, csvEscape(t.merchant), csvEscape(cat?.name || t.category), (t.amount / 100).toFixed(2), csvEscape(account?.name || ''), t.method, csvEscape(t.note || '')].join(',');
     })
     .join('\n');
-  downloadFile(header + rows, `transactions-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
+  downloadFile(header + rows, `transactions-${todayStr()}.csv`, 'text/csv');
   toast('Transactions exported');
 }
 

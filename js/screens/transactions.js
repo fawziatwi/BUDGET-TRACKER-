@@ -101,7 +101,7 @@ function txRow(t) {
       <div class="icon-badge" style="background:${cat.color}26">${cat.icon}</div>
       <div style="flex:1">
         <div class="item-title">${escapeHtml(t.merchant)}</div>
-        <div class="item-sub">${cat.name}${t.note ? ' · ' + escapeHtml(t.note) : ''} ${t.method === 'cash' ? '· 💵 cash' : ''}</div>
+        <div class="item-sub">${cat.name}${t.note ? ' · ' + escapeHtml(t.note) : ''} ${t.method === 'cash' ? '· 💵 cash' : ''}${t.autoLogged ? ' · 🔁 auto' : ''}</div>
       </div>
       <div class="item-amount ${t.amount >= 0 ? 'positive' : 'negative'}">${fmtMoney(t.amount)}</div>
     </div>

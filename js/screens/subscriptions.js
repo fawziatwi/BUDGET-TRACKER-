@@ -1,7 +1,8 @@
 import { db, uid } from '../db.js';
-import { store, subscribe, notify, fmtMoney, categoryById } from '../state.js';
+import { store, subscribe, notify, fmtMoney, categoryById, todayStr } from '../state.js';
 import { detectRecurring } from '../smart.js';
 import { openSheet, toast, escapeHtml } from '../ui.js';
+import { processDueSubscriptions } from '../autopay.js';
 
 const CADENCES = [
   { id: 'Weekly', days: 7 },
@@ -99,7 +100,8 @@ function openSubForm(sub = null) {
       ${CADENCES.map((c) => `<button data-cadence="${c.id}" class="${c.id === selectedCadence ? 'active' : ''}">${c.id}</button>`).join('')}
     </div>
     <div class="field-label">Next Charge Date</div>
-    <input class="field" id="sf-date" type="date" value="${sub?.nextDate || new Date().toISOString().slice(0, 10)}" />
+    <input class="field" id="sf-date" type="date" value="${sub?.nextDate || todayStr()}" />
+    <div class="item-sub" style="margin-top:-8px;margin-bottom:14px">On this date we'll automatically log the transaction and deduct it from the account below — no need to enter it by hand.</div>
     <div class="field-label">Category</div>
     <div class="chip-row" id="sf-cats">
       ${categories.map((c) => `<button type="button" class="chip ${c.id === selectedCat ? 'selected' : ''}" data-cat="${c.id}">${c.icon} ${escapeHtml(c.name)}</button>`).join('')}
@@ -152,8 +154,9 @@ function openSubForm(sub = null) {
         const idx = store.subscriptions.findIndex((s) => s.id === record.id);
         if (idx >= 0) store.subscriptions[idx] = record; else store.subscriptions.push(record);
         notify();
-        toast(isEdit ? 'Subscription updated' : 'Subscription added');
         close();
+        const created = await processDueSubscriptions();
+        if (!created.length) toast(isEdit ? 'Subscription updated' : 'Subscription added');
       });
 
       const del = sheetEl.querySelector('#sf-delete');

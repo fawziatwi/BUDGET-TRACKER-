@@ -1,4 +1,4 @@
-import { daysInMonth, monthKey } from './state.js';
+import { daysInMonth, monthKey, toDateStr } from './state.js';
 import { CATEGORY_KEYWORDS } from './seed.js';
 
 function normalizeMerchant(name) {
@@ -73,7 +73,7 @@ export function detectRecurring(transactions) {
       cadenceDays: cadence.days,
       occurrences: txs.length,
       lastDate: last.date,
-      nextDate: nextDate.toISOString().slice(0, 10),
+      nextDate: toDateStr(nextDate),
       priceIncrease,
       firstAmount: amounts[0],
       lastAmount: amounts[amounts.length - 1],

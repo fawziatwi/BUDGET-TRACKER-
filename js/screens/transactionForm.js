@@ -1,5 +1,5 @@
 import { db, uid } from '../db.js';
-import { store, notify } from '../state.js';
+import { store, notify, todayStr } from '../state.js';
 import { openSheet, toast, escapeHtml } from '../ui.js';
 import { suggestCategory, learnedEntry } from '../smart.js';
 
@@ -36,7 +36,7 @@ export function openTransactionForm({ transaction = null } = {}) {
       ${accounts.map((a) => `<button type="button" class="chip" data-acc="${a.id}">${{ cash: '💵', credit_card: '💳', savings: '💎' }[a.type] || '🏦'} ${escapeHtml(a.name)}</button>`).join('')}
     </div>
     <div class="field-label">Date</div>
-    <input class="field" id="tf-date" type="date" value="${(transaction?.date || new Date().toISOString().slice(0, 10))}" />
+    <input class="field" id="tf-date" type="date" value="${(transaction?.date || todayStr())}" />
     <div class="field-label">Note (optional)</div>
     <input class="field" id="tf-note" placeholder="Add a note" value="${escapeHtml(transaction?.note || '')}" />
     <button class="btn btn-primary" id="tf-save">${isEdit ? 'Save Changes' : 'Add Transaction'}</button>
@@ -89,7 +89,7 @@ export function openTransactionForm({ transaction = null } = {}) {
         const category = selectedCategory || 'other';
         const merchant = merchantInput.value.trim() || (kind === 'income' ? 'Income' : 'Other');
         const cents = Math.round(rawAmount * 100) * (kind === 'income' ? 1 : -1);
-        const date = sheetEl.querySelector('#tf-date').value || new Date().toISOString().slice(0, 10);
+        const date = sheetEl.querySelector('#tf-date').value || todayStr();
         const note = sheetEl.querySelector('#tf-note').value.trim();
 
         const record = {

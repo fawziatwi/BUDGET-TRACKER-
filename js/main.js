@@ -2,6 +2,7 @@ import { db, uid } from './db.js';
 import { store, notify } from './state.js';
 import { seedIfEmpty } from './seed.js';
 import { registerRoute, initRouter, navigate, currentPath } from './router.js';
+import { processDueSubscriptions } from './autopay.js';
 
 import { renderDashboard } from './screens/dashboard.js';
 import { renderTransactions } from './screens/transactions.js';
@@ -79,6 +80,7 @@ async function main() {
   await seedIfEmpty(db);
   await seedDefaultAccounts();
   await loadStore();
+  await processDueSubscriptions();
 
   registerRoute('/dashboard', renderDashboard);
   registerRoute('/transactions', renderTransactions);

@@ -46,3 +46,18 @@ export function startOfMonth(date = new Date()) {
 export function daysInMonth(date = new Date()) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 }
+
+// Formats a Date as YYYY-MM-DD using its LOCAL calendar date. Never use
+// toISOString().slice(0, 10) for this — that reads the UTC date, which is
+// off by one day from the user's local date for roughly half the globe
+// (anywhere not UTC) near midnight.
+export function toDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+export function todayStr() {
+  return toDateStr(new Date());
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'budget-tracker-v4';
+const CACHE_NAME = 'budget-tracker-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -12,6 +12,7 @@ const ASSETS = [
   './js/smart.js',
   './js/seed.js',
   './js/ui.js',
+  './js/autopay.js',
   './js/screens/dashboard.js',
   './js/screens/transactions.js',
   './js/screens/transactionForm.js',
